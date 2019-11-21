@@ -18,13 +18,19 @@
 
 // ============= НАСТРОЙКИ =============
 
+#define DEBUG 1
+#define VERTGAUGE 1 // вертикальный/горизонтальный индикатор
+#define DEMOTIME 5 // в секундах
+#define RANDOM_DEMO 1 // 0,1 - включить рандомный выбор режима
+
 //// -------- РАССВЕТ -------
 //#define DAWN_BRIGHT 200       // макс. яркость рассвета
 //#define DAWN_TIMEOUT 1        // сколько рассвет светит после времени будильника, минут
 
 // ---------- МАТРИЦА ---------
-#define BRIGHTNESS 40         // стандартная маскимальная яркость (0-255)
-#define CURRENT_LIMIT 2000    // лимит по току в миллиамперах, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
+#define BRIGHTNESS 255        // стандартная маскимальная яркость (0-255)
+#define MIN17BRIGHTNESS 50    // минимальная яркость 17 режима, белая лампа (0-100) для исключения нерабочей зоны
+#define CURRENT_LIMIT 2600    // лимит по току в миллиамперах, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
 
 #define WIDTH 16              // ширина матрицы
 #define HEIGHT 16             // высота матрицы
@@ -82,7 +88,8 @@ int8_t currentMode = 17;
 boolean loadingFlag = true;
 boolean ONflag = true;
 byte numHold;
-unsigned long numHold_Timer = 0;
+unsigned long numHold_Timer = 0UL;
+unsigned long userTimer = 0UL;
 //uint32_t eepromTimer;
 //boolean settChanged = false;
 // Конфетти, Огонь, Радуга верт., Радуга гориз., Смена цвета,
@@ -91,6 +98,10 @@ unsigned long numHold_Timer = 0;
 // colorRoutine, snowRoutine, полосы "Матрица"
 
 unsigned char matrixValue[8][16];
+byte xStep;
+byte xCol;
+byte yStep;
+byte yCol;
 
 void setup() {
 
@@ -106,6 +117,43 @@ void setup() {
 
   Serial.begin(9600);
   Serial.println();
+
+  xStep = WIDTH / 4;
+  xCol = 4;
+  if(xStep<2) {
+    xStep = WIDTH / 3;
+    xCol = 3;
+  } else if(xStep<2) {
+    xStep = WIDTH / 2;
+    xCol = 2;
+  } else if(xStep<2) {
+    xStep = 1;
+    xCol = 1;
+  }
+
+  yStep = HEIGHT / 4;
+  yCol = 4;
+  if(yStep<2) {
+    yStep = HEIGHT / 3;
+    yCol = 3;
+  } else if(yStep<2) {
+    yStep = HEIGHT / 2;
+    yCol = 2;
+  } else if(yStep<2) {
+    yStep = 1;
+    yCol = 1;
+  }
+
+  #ifdef DEBUG
+    Serial.print("xStep: ");
+    Serial.print(xStep);
+    Serial.print(" xCol:");
+    Serial.println(xCol);
+    Serial.print("yStep: ");
+    Serial.print(yStep);
+    Serial.print(" yCol:");
+    Serial.println(yCol);
+  #endif
 
   if (EEPROM.read(0) == 102) {                    // если было сохранение настроек, то восстанавливаем их (с)НР
     currentMode = EEPROM.read(1);

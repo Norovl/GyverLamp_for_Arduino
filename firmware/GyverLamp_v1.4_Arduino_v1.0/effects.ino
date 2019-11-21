@@ -184,7 +184,8 @@ void colorsRoutine() {
 // --------------------------------- ЦВЕТ ------------------------------------
 void colorRoutine() {
   for (int i = 0; i < NUM_LEDS; i++) {
-    leds[i] = CHSV(modes[14].scale * 2.5, 255, 255);
+    //leds[i] = CHSV(modes[14].scale * 2.5, 255, 255);
+    leds[i] = CHSV(modes[14].speed*(modes[14].scale/16+1), 255, 255);
   }
 }
 
@@ -231,7 +232,8 @@ void matrixRoutine() {
 // ------------------------------ БЕЛАЯ ЛАМПА ------------------------------
 void whiteLamp() {
   for (byte y = 0; y < (HEIGHT / 2); y++) {
-    CHSV color = CHSV(100, 1, constrain(modes[17].brightness - (long)modes[17].speed * modes[17].brightness / 255 * y / 2, 1, 255));
+    CHSV color = CHSV(56, modes[17].scale, constrain(modes[17].brightness - (long)modes[17].speed * modes[17].brightness / BRIGHTNESS * y / 2, 1, 255));
+    //CHSV color = CHSV(100, 1, constrain(modes[17].brightness - (long)modes[17].speed * modes[17].brightness / BRIGHTNESS * y / 2, 1, 255));
     for (byte x = 0; x < WIDTH; x++) {
       drawPixelXY(x, y + 8, color);
       drawPixelXY(x, 7 - y, color);
