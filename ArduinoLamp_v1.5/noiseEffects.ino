@@ -50,7 +50,7 @@ void madnessNoise()
     for (uint8_t j = 0; j < HEIGHT; j++)
     {
       CRGB thisColor = CHSV(noise[j][i], 255, noise[i][j]);
-      drawPixelXY(i, j, thisColor);                         //leds[XY(i, j)] = CHSV(noise[j][i], 255, noise[i][j]);
+      leds[XY(i, j)] = CHSV(noise[j][i], 255, noise[i][j]);
     }
   }
   ihue += 1;
@@ -66,7 +66,7 @@ void rainbowNoise()
     speed = modes[currentMode].Speed;
     colorLoop = 1;
   }
-  fillNoiseLED(true,true,true);
+  fillNoiseLED(0.125,0.0625,1);
 }
 
 void rainbowStripeNoise()
@@ -79,7 +79,7 @@ void rainbowStripeNoise()
     speed = modes[currentMode].Speed;
     colorLoop = 1;
   }
-  fillNoiseLED(true,true,true);
+  fillNoiseLED(0.125,0.0625,1);
 }
 
 void zebraNoise()
@@ -98,7 +98,7 @@ void zebraNoise()
     speed = modes[currentMode].Speed;
     colorLoop = 1;
   }
-  fillNoiseLED(true,true,true);
+  fillNoiseLED(0.125,0.0625,1);
 }
 
 void forestNoise()
@@ -111,7 +111,7 @@ void forestNoise()
     speed = modes[currentMode].Speed;
     colorLoop = 0;
   }
-  fillNoiseLED(true,true,true);
+  fillNoiseLED(0.125,0.0625,1);
 }
 
 void oceanNoise()
@@ -125,7 +125,7 @@ void oceanNoise()
     colorLoop = 0;
   }
 
-  fillNoiseLED(true,true,true);
+  fillNoiseLED(0.125,0.0625,1);
 }
 
 void plasmaNoise()
@@ -138,7 +138,7 @@ void plasmaNoise()
     speed = modes[currentMode].Speed;
     colorLoop = 1;
   }
-  fillNoiseLED(true,true,true);
+  fillNoiseLED(0.125,0.0625,1);
 }
 
 void cloudNoise()
@@ -151,7 +151,7 @@ void cloudNoise()
     speed = modes[currentMode].Speed;
     colorLoop = 0;
   }
-  fillNoiseLED(true,true,true);
+  fillNoiseLED(0.125,0.0625,1);
 }
 
 void lavaNoise()
@@ -164,7 +164,7 @@ void lavaNoise()
     speed = modes[currentMode].Speed;
     colorLoop = 0;
   }
-  fillNoiseLED(true,true,true);
+  fillNoiseLED(0.125,0.0625,1);
 }
 
 void heatNoise()
@@ -177,7 +177,7 @@ void heatNoise()
     speed = modes[currentMode].Speed;
     colorLoop = 0;
   }
-  fillNoiseLED(false,true,false);
+  fillNoiseLED(1,0,0.125);
 }
 
 void smokeNoise()
@@ -190,7 +190,7 @@ void smokeNoise()
     speed = modes[currentMode].Speed;
     colorLoop = 0;
   }
-  fillNoiseLED(false,true,false);
+  fillNoiseLED(1,0,0.125);
 }
 
 void lavLampNoise()
@@ -204,10 +204,10 @@ void lavLampNoise()
     speed = modes[currentMode].Speed;
     colorLoop = 0;
   }
-  fillNoiseLED(false,true,false);
+  fillNoiseLED(1,0,0.125);
 }
 // ************* СЛУЖЕБНЫЕ *************
-void fillNoiseLED(bool x_dir, bool y_dir, bool z_dir)
+void fillNoiseLED(byte x_dir, byte y_dir, byte z_dir)
 {
   uint8_t dataSmoothing = 0;
   if (speed < 50)
@@ -236,16 +236,9 @@ void fillNoiseLED(bool x_dir, bool y_dir, bool z_dir)
       noise[i][j] = data;
     }
   }
-  if(z_dir)
-  z += speed;
-
-  // apply slow drift to X and Y, just for visual variation.
-  if(x_dir){ if((z_dir)&&(y_dir))
-  x += speed /8;}
-  else x += speed;
-  if(y_dir){ if((z_dir)&&(x_dir))
-  y -= speed / 16;}
-  else y -= speed;
+  z += speed*z_dir;
+  x -= speed*x_dir;
+  y += speed*y_dir;
 
   for (uint8_t i = 0; i < WIDTH; i++)
   {
@@ -269,7 +262,7 @@ void fillNoiseLED(bool x_dir, bool y_dir, bool z_dir)
         bri = dim8_raw( bri * 2);
       }
       CRGB color = ColorFromPalette( currentPalette, index, bri);
-      drawPixelXY(i, j, color);                             //leds[XY(i, j)] = color;
+      leds[XY(i, j)] = color;
     }
   }
   ihue += 1;

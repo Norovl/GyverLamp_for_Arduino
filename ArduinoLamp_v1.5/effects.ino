@@ -195,14 +195,14 @@ void fireRoutine() {
     pcnt = 0;
   }
   drawFrame(pcnt);
-  pcnt += 30;
+  pcnt += 25;
 }
 
 // Случайным образом генерирует следующую линию (matrix row)
 
 void generateLine() {
   for (uint8_t x = 0; x < WIDTH; x++) {
-    line[x] = random(128, 255);
+    line[x] = random(127, 255);
   }
 }
 
@@ -326,7 +326,7 @@ void colorRoutine() {
 }
 
 // ------------------------------ снегопад 2.0 --------------------------------
-/*void snowRoutine() {
+void snowRoutine() {
   // сдвигаем всё вниз
   for (byte x = 0; x < WIDTH; x++) {
     for (byte y = 0; y < HEIGHT - 1; y++) {
@@ -343,9 +343,9 @@ void colorRoutine() {
       drawPixelXY(x, HEIGHT - 1, 0x000000);
   }
 }
-*/
+
 // ------------------------------ МАТРИЦА ------------------------------
-/*void matrixRoutine() {
+void matrixRoutine() {
   for (byte x = 0; x < WIDTH; x++) {
     // заполняем случайно верхнюю строку
     uint32_t thisColor = getPixColorXY(x, HEIGHT - 1);
@@ -364,7 +364,7 @@ void colorRoutine() {
     }
   }
 }
-*/
+
 // ------------------------------ БЕЛАЯ ЛАМПА ------------------------------
 void whiteLamp() {
   for (byte y = 0; y < (HEIGHT / 2); y++) {
@@ -586,7 +586,7 @@ void ballRoutine()
 #define BALLS_AMOUNT          (3U)                          // количество "шариков"
 #define CLEAR_PATH            (1U)                          // очищать путь
 #define BALL_TRACK            (1U)                          // (0 / 1) - вкл/выкл следы шариков
-#define TRACK_STEP            (150U)                         // длина хвоста шарика (чем больше цифра, тем хвост короче)
+#define TRACK_STEP            (130U)                         // длина хвоста шарика (чем больше цифра, тем хвост короче)
 int16_t coord[BALLS_AMOUNT][2U];
 int8_t vector[BALLS_AMOUNT][2U];
 CRGB ballColors[BALLS_AMOUNT];
@@ -651,7 +651,7 @@ void ballsRoutine()
 
 //-------------------Водопад------------------------------
 #define COOLINGNEW 32
-#define SPARKINGNEW 80 /*
+#define SPARKINGNEW 80
   extern const TProgmemRGBPalette16 WaterfallColors4in1_p FL_PROGMEM = {CRGB::Black,CRGB::DarkSlateGray,CRGB::DimGray,CRGB::LightSlateGray,CRGB::DimGray,CRGB::DarkSlateGray,CRGB::Silver,CRGB::Lavender,CRGB::Silver,CRGB::Azure,CRGB::LightGrey,CRGB::GhostWhite,CRGB::Silver,CRGB::White,CRGB::RoyalBlue};
   void fire2012WithPalette4in1() { 
   uint8_t rCOOLINGNEW = constrain((uint16_t)(modes[currentMode].Scale % 16) * 32 / HEIGHT + 16, 1, 255) ;
@@ -698,7 +698,7 @@ for (uint8_t x = 0; x < WIDTH; x++) {
     }
   }
 }
-}*/
+}
 void fire2012WithPalette() {
   //    bool fire_water = modes[currentMode].Scale <= 50;
   //    uint8_t COOLINGNEW = fire_water ? modes[currentMode].scale * 2  + 20 : (100 - modes[currentMode].Scale ) *  2 + 20 ;
@@ -1115,7 +1115,7 @@ void stormyRain()
   //rain(0, 90, map8(intensity,0,150)+60, 10, solidRainColor, true, true, true);
   rain(60, 160, (modes[currentMode].Scale-1) * 2.58, 30, solidRainColor, true, true, true);
 }
-/*// ============= ЭФФЕКТ ОГОНЬ 2018 ===============
+// ============= ЭФФЕКТ ОГОНЬ 2018 ===============
 // https://gist.github.com/StefanPetrick/819e873492f344ebebac5bcd2fdd8aa8
 // https://gist.github.com/StefanPetrick/1ba4584e534ba99ca259c1103754e4c5
 // Адаптация от (c) SottNick
@@ -1133,7 +1133,7 @@ uint32_t scale32_y[NUM_LAYERSMAX];
 uint8_t fire18heat[NUM_LEDS];
 // this finds the right index within a serpentine matrix
 
-void Fire2018_2() {
+void Fire2018() {
   const uint8_t CentreY =  HEIGHT / 2 + (HEIGHT % 2);
   const uint8_t CentreX =  WIDTH / 2  + (WIDTH % 2) ;
 
@@ -1225,10 +1225,165 @@ void Fire2018_2() {
   }
 
 }
-*/
+
+// --------------------------- эффект спирали ----------------------
+/*
+ * Aurora: https://github.com/pixelmatix/aurora
+ * https://github.com/pixelmatix/aurora/blob/sm3.0-64x64/PatternSpiro.h
+ * Copyright (c) 2014 Jason Coon
+ * Неполная адаптация SottNick
+ */
+    byte spirotheta1 = 0;
+    byte spirotheta2 = 0;
+//    byte spirohueoffset = 0; // будем использовать переменную сдвига оттенка hue из эффектов Радуга
+    
+
+    const uint8_t spiroradiusx = WIDTH / 4;
+    const uint8_t spiroradiusy = HEIGHT / 4;
+    
+    const uint8_t spirocenterX = WIDTH / 2-0.5;
+    const uint8_t spirocenterY = HEIGHT / 2-0.5;
+    
+    const uint8_t spirominx = spirocenterX - spiroradiusx;
+    const uint8_t spiromaxx = spirocenterX + spiroradiusx + 1;
+    const uint8_t spirominy = spirocenterY - spiroradiusy;
+    const uint8_t spiromaxy = spirocenterY + spiroradiusy + 1;
+
+    uint8_t spirocount = 1;
+    uint8_t spirooffset = 256 / spirocount;
+    boolean spiroincrement = false;
+
+    boolean spirohandledChange = false;
+
+uint8_t mapsin8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255) {
+  uint8_t beatsin = sin8(theta);
+  uint8_t rangewidth = highest - lowest;
+  uint8_t scaledbeat = scale8(beatsin, rangewidth);
+  uint8_t result = lowest + scaledbeat;
+  return result;
+}
+
+uint8_t mapcos8(uint8_t theta, uint8_t lowest = 0, uint8_t highest = 255) {
+  uint8_t beatcos = cos8(theta);
+  uint8_t rangewidth = highest - lowest;
+  uint8_t scaledbeat = scale8(beatcos, rangewidth);
+  uint8_t result = lowest + scaledbeat;
+  return result;
+}
+  
+void spiroRoutine() {
+    if (loadingFlag)
+    {
+      loadingFlag = false;
+      setCurrentPalette();
+    }
+
+        blurScreen(5);
+      dimAll(255U - modes[currentMode].Speed / 10);
+
+      boolean change = false;
+      
+      for (uint8_t i = 0; i < spirocount; i++) {
+        uint8_t x = mapsin8(spirotheta1 + i * spirooffset, spirominx, spiromaxx);
+        uint8_t y = mapcos8(spirotheta1 + i * spirooffset, spirominy, spiromaxy);
+
+        uint8_t x2 = mapsin8(spirotheta2 + i * spirooffset, x - spiroradiusx, x + spiroradiusx);
+        uint8_t y2 = mapcos8(spirotheta2 + i * spirooffset, y - spiroradiusy, y + spiroradiusy);
+
+
+       //CRGB color = ColorFromPalette( PartyColors_p, (hue + i * spirooffset), 128U); // вообще-то палитра должна постоянно меняться, но до адаптации этого руки уже не дошли
+       //CRGB color = ColorFromPalette(*curPalette, hue + i * spirooffset, 128U); // вот так уже прикручена к бегунку Масштаба. за
+       //leds[XY(x2, y2)] += color;
+if (x2<WIDTH && y2<HEIGHT) // добавил проверки. не знаю, почему эффект подвисает без них
+        leds[XY(x2, y2)] += (CRGB)ColorFromPalette(*curPalette, hue + i * spirooffset);
+        
+        if((x2 == spirocenterX && y2 == spirocenterY) ||
+           (x2 == spirocenterX && y2 == spirocenterY)) change = true;
+      }
+
+      spirotheta2 += 2;
+
+      EVERY_N_MILLIS(12) {
+        spirotheta1 += 1;
+      }
+
+      EVERY_N_MILLIS(75) {
+        if (change && !spirohandledChange) {
+          spirohandledChange = true;
+          
+          if (spirocount >= WIDTH || spirocount == 1) spiroincrement = !spiroincrement;
+
+          if (spiroincrement) {
+            if(spirocount >= 10)
+              spirocount *= 2;
+            else
+              spirocount += 1;
+          }
+          else {
+            if(spirocount > 4)
+              spirocount /= 2;
+            else
+              spirocount -= 1;
+          }
+
+          spirooffset = 256 / spirocount;
+        }
+        
+        if(!change) spirohandledChange = false;
+      }
+
+      EVERY_N_MILLIS(33) {
+        hue += 1;
+      }
+}
+
+// ******************************** СИНУСОИДЫ *******************************
+  #define WAVES_AMOUNT 2    // количество синусоид
+ #define DEG_TO_RAD 0.017453
+  int t;
+  byte w[WAVES_AMOUNT];
+  byte phi[WAVES_AMOUNT];
+  byte A[WAVES_AMOUNT];
+  CRGB waveColors[WAVES_AMOUNT];
+
+  void wavesRoutine() {
+  if (loadingFlag) {
+    loadingFlag = false;
+    for (byte j = 0; j < WAVES_AMOUNT; j++) {
+      // забиваем случайными данными
+      w[j] = random(17, 25);
+      phi[j] = random(0, 360);
+      A[j] = HEIGHT / 2 * random(4, 11) / 10;
+      waveColors[j] = CHSV(random(0, 9) * 28, 255, 255);
+    }
+  }
+ 
+
+    // сдвигаем все пиксели вправо
+    for (int i = WIDTH - 1; i > 0; i--)
+      for (int j = 0; j < HEIGHT; j++)
+        drawPixelXY(i, j, getPixColorXY(i - 1, j));
+
+    // увеличиваем "угол"
+    t++;
+    if (t > 360) t = 0;
+
+    // заливаем чёрным левую линию
+    for (byte i = 0; i < HEIGHT; i++) {
+      drawPixelXY(0, i, 0x000000);
+    }
+
+    // генерируем позицию точки через синус
+    for (byte j = 0; j < WAVES_AMOUNT; j++) {
+      float value = HEIGHT / 2 + (float)A[j] * sin((float)w[j] * t * DEG_TO_RAD + (float)phi[j] * DEG_TO_RAD);
+      leds[getPixelNumber(0, (byte)value)] = waveColors[j];
+    }
+  
+  }
+  
 //далее будут эффекты заточены для лампы в.1 лиш нужно припаять ленты как матрицу(паралельная или зигзаг)
 
-/*// ****************************** ОГОНЁК ****************************** разный тип матрицы - выглядить будет по разному
+// ****************************** ОГОНЁК ****************************** разный тип матрицы - выглядить будет по разному
 int16_t position;
 boolean direction;
 #define TRACK_STEP3 100
@@ -1248,9 +1403,8 @@ void lighter() {
   }
   leds[position] =  CHSV(modes[currentMode].Scale * 2.5, 255, 255);
 }
-*/
 // ============= ЭФФЕКТ ОГОНЬ 2012 ===============
-/*// там выше есть его копии для эффектов Водопад и Водопад 4 в 1
+// там выше есть его копии для эффектов Водопад и Водопад 4 в 1
   // по идее, надо бы объединить и оптимизировать, но мелких отличий довольно много
   // based on FastLED example Fire2012WithPalette: https://github.com/FastLED/FastLED/blob/master/examples/Fire2012WithPalette/Fire2012WithPalette.ino
 
@@ -1333,8 +1487,6 @@ void lighter() {
       nblend(leds[XY(x,y)], ColorFromPalette(*curPalette, ((noise3d[0][x][y]*0.7) + (noise3d[0][wrapX(x+1)][y]*0.3))), fireSmoothing);
   }
   }
-*/
-
 // ------------- светлячки --------------
 #define BALLS_AMOUNT2          (10U)                          // количество "cветлячков"
 #define CLEAR_PATH2            (1U)                          // очищать путь
