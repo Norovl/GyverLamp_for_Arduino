@@ -80,4 +80,15 @@ void changePower() {    // плавное включение/выключени�
     delay(2);
     FastLED.show();
   }
-} 
+}
+
+ void demo(){
+  if (isDemo && ONflag && millis() >= DemTimer){
+    if(RANDOM_DEMO)
+    currentMode = random8(MODE_AMOUNT); // если нужен следующий случайный эффект
+    else 
+    currentMode = currentMode + 1U < MODE_AMOUNT ? currentMode + 1U : 0U; // если нужен следующий по списку эффект
+    FastLED.clear();
+    DemTimer = millis() + DEMOTIMELIMIT;
+    loadingFlag = true;}
+}

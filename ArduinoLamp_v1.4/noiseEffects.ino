@@ -24,10 +24,10 @@ CRGBPalette16 pPalette;
 void SetupPalette()
 {
   // 'black out' all 16 palette entries...
-  fill_solid( pPalette, 16, CRGB::Black);
+  fill_solid( pPalette, 16, CHSV(modes[currentMode].Scale * 2.5,255, 75));
 
   for(uint8_t i = 0; i < 6; i++) {
-    pPalette[i] = CRGB::Blue;
+    pPalette[i] = CHSV(modes[currentMode].Scale * 2.5, 255, 255);
   }
 }
 
@@ -200,11 +200,11 @@ void lavLampNoise()
     loadingFlag = false;
     SetupPalette();
     currentPalette = pPalette;
-    scale = modes[currentMode].Scale;
+    scale = 30;
     speed = modes[currentMode].Speed;
     colorLoop = 0;
   }
-  fillNoiseLED(1,0,0.125);
+  fillNoiseLED(1,0.625,0.125);
 }
 // ************* СЛУЖЕБНЫЕ *************
 void fillNoiseLED(byte x_dir, byte y_dir, byte z_dir)
