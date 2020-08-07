@@ -44,76 +44,6 @@ void dimAll(uint8_t value) {
     leds[i].nscale8(value); //fadeToBlackBy
   }
 }
-void DrawLine(int x1, int y1, int x2, int y2, CRGB color)
-{
-  int deltaX = abs(x2 - x1);
-  int deltaY = abs(y2 - y1);
-  int signX = x1 < x2 ? 1 : -1;
-  int signY = y1 < y2 ? 1 : -1;
-  int error = deltaX - deltaY;
-
-  drawPixelXY(x2, y2, color);
-  while (x1 != x2 || y1 != y2) {
-      drawPixelXY(x1, y1, color);
-      int error2 = error * 2;
-      if (error2 > -deltaY) {
-          error -= deltaY;
-          x1 += signX;
-      }
-      if (error2 < deltaX) {
-          error += deltaX;
-          y1 += signY;
-      }
-  }
-}
-
-
-void drawPixelXYF(float x, float y, CRGB color)
-{
-  // extract the fractional parts and derive their inverses
-  uint8_t xx = (x - (int)x) * 255, yy = (y - (int)y) * 255, ix = 255 - xx, iy = 255 - yy;
-  // calculate the intensities for each affected pixel
-  #define WU_WEIGHT(a,b) ((uint8_t) (((a)*(b)+(a)+(b))>>8))
-  uint8_t wu[4] = {WU_WEIGHT(ix, iy), WU_WEIGHT(xx, iy),
-                   WU_WEIGHT(ix, yy), WU_WEIGHT(xx, yy)};
-  // multiply the intensities by the colour, and saturating-add them to the pixels
-  for (uint8_t i = 0; i < 4; i++) {
-    int16_t xn = x + (i & 1), yn = y + ((i >> 1) & 1);
-    CRGB clr = getPixColorXY(xn, yn);
-    clr.r = qadd8(clr.r, (color.r * wu[i]) >> 8);
-    clr.g = qadd8(clr.g, (color.g * wu[i]) >> 8);
-    clr.b = qadd8(clr.b, (color.b * wu[i]) >> 8);
-    drawPixelXY(xn, yn, clr);
-  }
-}
-
-void drawCircleF(float x0, float y0, float radius, CRGB color){
-  float x = 0, y = radius, error = 0;
-  float delta = 1 - 2 * radius;
-
-  while (y >= 0) {
-    drawPixelXYF(x0 + x, y0 + y, color);
-    drawPixelXYF(x0 + x, y0 - y, color);
-    drawPixelXYF(x0 - x, y0 + y, color);
-    drawPixelXYF(x0 - x, y0 - y, color);
-    error = 2 * (delta + y) - 1;
-    if (delta < 0 && error <= 0) {
-      ++x;
-      delta += 2 * x + 1;
-      continue;
-    }
-    error = 2 * (delta - x) - 1;
-    if (delta > 0 && error > 0) {
-      --y;
-      delta += 1 - 2 * y;
-      continue;
-    }
-    ++x;
-    delta += 2 * (x - y);
-    --y;
-  }
-}
-
 // --------------------------------- конфетти ------------------------------------
 #define FADE_OUT_SPEED        (70U)                         // скорость затухания
 void sparklesRoutine()
@@ -740,12 +670,12 @@ void fire2012WithPalette() {
 //stepko
 #define FOR_i(from, to) for(int i = (from); i < (to); i++)
 #define FOR_j(from, to) for(int j = (from); j < (to); j++)
-int counter = 0;
+int ciunter = 0;
 int STEP = modes[30].Scale; //нужно виставить номер эффекта с пометкой false или любое число если не хотите Белого огня 
 void noiseWave(bool isColored) {
 FastLED.clear();
 FOR_i(0, WIDTH) {
-byte thisVal = inoise8(i * STEP, counter);
+byte thisVal = inoise8(i * STEP, ciunter);
 byte thisMax = map(thisVal, 0, 255, 0, HEIGHT);
 if (isColored) {
 if  (modes[currentMode].Scale < 16) {
@@ -789,7 +719,7 @@ drawPixelXY(i, j, ColorFromPalette(WaterfallColors_p, map(j, 0, thisMax, 250, 0)
 }
 }
 }
-counter += 30;
+ciunter += 30;
 }
 
 //----------------Gifка----------------------
@@ -1380,7 +1310,153 @@ if (x2<WIDTH && y2<HEIGHT) // добавил проверки. не знаю, п
     }
   
   }
+
+  // ------------------------------ ЭФФЕКТ ЗВЁЗДЫ ----------------------
+// (c) SottNick
+// производная от эффекта White Warp
+// https://github.com/marcmerlin/NeoMatrix-FastLED-IR/blob/master/Table_Mark_Estes_Impl.h
+// https://github.com/marcmerlin/FastLED_NeoMatrix_SmartMatrix_LEDMatrix_GFX_Demos/blob/master/LEDMatrix/Table_Mark_Estes/Table_Mark_Estes.ino
+//int16_t pointy, blender = 128;//, laps, hue, steper,  xblender, hhowmany, radius3, xpoffset[MATRIX_WIDTH * 3];
+#define STAR_BLENDER 128U             // хз что это 
+#define CENTER_DRIFT_SPEED 6U         // скорость перемещения плавающего центра возникновения звёзд
+#define bballsMaxNUM            (WIDTH * 2)  
+unsigned int  counter;//, ringdelay;//, bringdelay, sumthum;
+//int16_t shifty = 6;//, pattern = 0, poffset;
+int16_t radius2;//, fpeed[WIDTH * 3], fcount[WIDTH * 3], fcountr[WIDTH * 3];//, xxx, yyy, dot = 3, rr, gg, bb, adjunct = 3;
+//uint8_t fcolor[WIDTH * 3];
+//uint16_t h = 0, howmany;// ccoolloorr, why1, why2, why3, eeks1, eeks2, eeks3, oldpattern, xhowmany, kk;
+float driftx, drifty;//, locusx, locusy, xcen, ycen, yangle, xangle;
+float cangle, sangle;//xfire[WIDTH * 3], yfire[WIDTH * 3], radius, xslope[MATRIX_WIDTH * 3], yslope[MATRIX_WIDTH * 3]; 
+
+//Дополнительная функция построения линий
+void DrawLine(int x1, int y1, int x2, int y2, CRGB color)
+{
+  int tmp;
+  int x,y;
+  int dx, dy;
+  int err;
+  int ystep;
+
+  uint8_t swapxy = 0;
   
+  if ( x1 > x2 ) dx = x1-x2; else dx = x2-x1;
+  if ( y1 > y2 ) dy = y1-y2; else dy = y2-y1;
+
+  if ( dy > dx ) 
+  {
+    swapxy = 1;
+    tmp = dx; dx =dy; dy = tmp;
+    tmp = x1; x1 =y1; y1 = tmp;
+    tmp = x2; x2 =y2; y2 = tmp;
+  }
+  if ( x1 > x2 ) 
+  {
+    tmp = x1; x1 =x2; x2 = tmp;
+    tmp = y1; y1 =y2; y2 = tmp;
+  }
+  err = dx >> 1;
+  if ( y2 > y1 ) ystep = 1; else ystep = -1;
+  y = y1;
+
+  for( x = x1; x <= x2; x++ )
+  {
+    if ( swapxy == 0 ) drawPixelXY(x, y, color);
+    else drawPixelXY(y, x, color);
+    err -= (uint8_t)dy;
+    if ( err < 0 ) 
+    {
+      y += ystep;
+      err += dx;
+    }
+  }
+}
+
+void drawstar(int16_t xlocl, int16_t ylocl, int16_t biggy, int16_t little, int16_t points, int16_t dangle, uint8_t koler)// random multipoint star
+{
+//  if (counter == 0) { // это, блин, вообще что за хрень была?!
+//    shifty = 3;//move quick 
+//  }
+  radius2 = 255 / points;
+  for (int i = 0; i < points; i++)
+  {
+    //DrawLine(xlocl + ((little * (sin8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), ylocl + ((little * (cos8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), CHSV(koler , 255, 255));
+    //DrawLine(xlocl + ((little * (sin8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), ylocl + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), CHSV(koler , 255, 255));
+    // две строчки выше - рисуют звезду просто по оттенку, а две строчки ниже - берут цвет из текущей палитры
+    DrawLine(xlocl + ((little * (sin8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), ylocl + ((little * (cos8(i * radius2 + radius2 / 2 - dangle) - 128.0)) / 128), xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), ColorFromPalette(*curPalette, koler));
+    DrawLine(xlocl + ((little * (sin8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), ylocl + ((little * (cos8(i * radius2 - radius2 / 2 - dangle) - 128.0)) / 128), xlocl + ((biggy * (sin8(i * radius2 - dangle) - 128.0)) / 128), ylocl + ((biggy * (cos8(i * radius2 - dangle) - 128.0)) / 128), ColorFromPalette(*curPalette, koler));
+    }
+}
+
+uint8_t bballsCOLOR[bballsMaxNUM] ;                   // цвет звезды (используем повторно массив эффекта Мячики)
+uint8_t bballsX[bballsMaxNUM] ;                       // количество углов в звезде (используем повторно массив эффекта Мячики)
+int   bballsPos[bballsMaxNUM] ;                       // задержка пуска звезды относительно счётчика (используем повторно массив эффекта Мячики)
+uint8_t bballsNUM;                                    // количество звёзд (используем повторно переменную эффекта Мячики)
+
+void starRoutine() {
+  //dimAll(255U - modes[currentMode].Scale * 2);
+  dimAll(89U);
+  //dimAll(myScale8(modes[currentMode].Scale));
+
+  if (loadingFlag)
+  {
+    loadingFlag = false;
+    setCurrentPalette();
+
+    driftx = random8(4, WIDTH - 4);//set an initial location for the animation center
+    drifty = random8(4, HEIGHT - 4);// set an initial location for the animation center
+    
+    cangle = (sin8(random(25, 220)) - 128.0) / 128.0;//angle of movement for the center of animation gives a float value between -1 and 1
+    sangle = (sin8(random(25, 220)) - 128.0) / 128.0;//angle of movement for the center of animation in the y direction gives a float value between -1 and 1
+    //shifty = random (3, 12);//how often the drifter moves будет CENTER_DRIFT_SPEED = 6
+
+    //pointy = 7; теперь количество углов у каждой звезды своё
+    bballsNUM = (WIDTH + 6U) / 2U;//(modes[currentMode].Scale - 1U) / 99.0 * (bballsMaxNUM - 1U) + 1U;
+    if (bballsNUM > bballsMaxNUM) bballsNUM = bballsMaxNUM;
+    for (uint8_t num = 0; num < bballsNUM; num++) {
+      bballsX[num] = random8(3, 9);//pointy = random8(3, 9); // количество углов в звезде
+      bballsPos[num] = counter + (num << 2) + 1U;//random8(50);//modes[currentMode].Scale;//random8(50, 99); // задержка следующего пуска звезды
+      bballsCOLOR[num] = random8();
+    }
+
+  }
+
+  
+  //hue++;//increment the color basis был общий оттенок на весь эффект. теперь у каждой звезды свой
+  //h = hue;  //set h to the color basis
+  counter++;
+  if (driftx > (WIDTH - spirocenterX / 2U))//change directin of drift if you get near the right 1/4 of the screen
+    cangle = 0 - fabs(cangle);
+  if (driftx < spirocenterX / 2U)//change directin of drift if you get near the right 1/4 of the screen
+    cangle = fabs(cangle);
+  if (counter % CENTER_DRIFT_SPEED == 0)
+    driftx = driftx + cangle;//move the x center every so often
+
+  if (drifty > ( HEIGHT - spirocenterY / 2U))// if y gets too big, reverse
+    sangle = 0 - fabs(sangle);
+  if (drifty < spirocenterY / 2U) // if y gets too small reverse
+    sangle = fabs(sangle);
+  if ((counter + CENTER_DRIFT_SPEED / 2U) % CENTER_DRIFT_SPEED == 0)
+    drifty =  drifty + sangle;//move the y center every so often
+  
+  //по идее, не нужно равнять диапазоны плавающего центра. за них и так вылет невозможен
+  //driftx = constrain(driftx, spirocenterX - spirocenterX / 3, spirocenterX + spirocenterX / 3);//constrain the center, probably never gets evoked any more but was useful at one time to keep the graphics on the screen....
+  //drifty = constrain(drifty, spirocenterY - spirocenterY / 3, spirocenterY + spirocenterY / 3);
+
+  for (uint8_t num = 0; num < bballsNUM; num++) {
+    if (counter >= bballsPos[num])//(counter >= ringdelay)
+    {
+      if (counter - bballsPos[num] <= WIDTH + 5U) {  //(counter - ringdelay <= WIDTH + 5){
+        //drawstar(driftx  , drifty, 2 * (counter - ringdelay), (counter - ringdelay), pointy, blender + h, h * 2 + 85);
+        drawstar(driftx  , drifty, 2 * (counter - bballsPos[num]), (counter - bballsPos[num]), bballsX[num], STAR_BLENDER + bballsCOLOR[num], bballsCOLOR[num] * 2);//, h * 2 + 85);// что, бл, за 85?!
+        bballsCOLOR[num]++;
+      }
+      else
+        //bballsX[num] = random8(3, 9);//pointy = random8(3, 9); // количество углов в звезде
+        bballsPos[num] = counter + (bballsNUM << 1) + 1U;//random8(50, 99);//modes[currentMode].Scale;//random8(50, 99); // задержка следующего пуска звезды
+    }
+  }
+}
+
 //далее будут эффекты заточены для лампы в.1 лиш нужно припаять ленты как матрицу(паралельная или зигзаг)
 
 // ****************************** ОГОНЁК ****************************** разный тип матрицы - выглядить будет по разному
@@ -1563,14 +1639,14 @@ for (uint8_t j = 0U; j < BALLS_AMOUNT2; j++)
 //  адаптация от SottNick
 #define bballsGRAVITY           (-9.81)              // Downward (negative) acceleration of gravity in m/s^2
 #define bballsH0                (1)                  // Starting height, in meters, of the ball (strip length)
-#define bballsMaxNUM            (WIDTH * 2)          // максимальное количество мячиков прикручено при адаптации для бегунка Масштаб
-uint8_t bballsNUM;                                   // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way) ... количество мячиков теперь задаётся бегунком, а не константой
-uint8_t bballsCOLOR[bballsMaxNUM] ;                   // прикручено при адаптации для разноцветных мячиков
-uint8_t bballsX[bballsMaxNUM] ;                       // прикручено при адаптации для распределения мячиков по радиусу лампы
+//#define bballsMaxNUM            (WIDTH * 2)          // максимальное количество мячиков прикручено при адаптации для бегунка Масштаб
+//uint8_t bballsNUM;                                   // Number of bouncing balls you want (recommend < 7, but 20 is fun in its own way) ... количество мячиков теперь задаётся бегунком, а не константой
+//uint8_t bballsCOLOR[bballsMaxNUM] ;                   // прикручено при адаптации для разноцветных мячиков
+//uint8_t bballsX[bballsMaxNUM] ;                       // прикручено при адаптации для распределения мячиков по радиусу лампы
 bool bballsShift[bballsMaxNUM] ;                      // прикручено при адаптации для того, чтобы мячики не стояли на месте
 float bballsVImpact0 = sqrt( -2 * bballsGRAVITY * bballsH0 );  // Impact velocity of the ball when it hits the ground if "dropped" from the top of the strip
 float bballsVImpact[bballsMaxNUM] ;                   // As time goes on the impact velocity will change, so make an array to store those values
-uint16_t   bballsPos[bballsMaxNUM] ;                       // The integer position of the dot on the strip (LED index)
+//uint16_t   bballsPos[bballsMaxNUM] ;                       // The integer position of the dot on the strip (LED index)
 long  bballsTLast[bballsMaxNUM] ;                     // The clock time of the last ground strike
 float bballsCOR[bballsMaxNUM] ;                       // Coefficient of Restitution (bounce damping)
 
