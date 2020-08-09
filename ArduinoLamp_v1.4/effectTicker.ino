@@ -1,6 +1,6 @@
 uint32_t effTimer;
 byte ind;
-void effectsTick() { { if (ONflag && millis() - effTimer >= ((currentMode < 5 || currentMode > 13) ? modes[currentMode].Speed : 50) ) {effTimer = millis(); switch (currentMode) {
+void effectsTick() { { if (ONflag && millis() - effTimer >= ((currentMode < 5 || currentMode > 16) ? modes[currentMode].Speed : 50) ) {effTimer = millis(); switch (currentMode) {
 //|номер   |название функции эффекта     |тоже надо|
    case 0 : sparklesRoutine();             break;
    case 1 : fireRoutine();                 break;

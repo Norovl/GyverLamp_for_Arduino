@@ -1457,6 +1457,36 @@ void starRoutine() {
   }
 }
 
+// ============= ЭФФЕКТ ПРИЗМАТА ===============
+// Prismata Loading Animation
+// https://github.com/pixelmatix/aurora/blob/master/PatternPendulumWave.h
+// Адаптация от (c) SottNick
+
+void PrismataRoutine() {
+  if (loadingFlag)
+  {
+    loadingFlag = false;
+    setCurrentPalette();
+  } 
+  
+  EVERY_N_MILLIS(33) {
+    hue++; // используем переменную сдвига оттенка из функций радуги, чтобы не занимать память
+  }
+  blurScreen(20); // @Palpalych посоветовал делать размытие
+  dimAll(255U - (modes[currentMode].Scale - 1U) % 11U * 3U);
+
+  for (uint8_t x = 0; x < WIDTH; x++)
+  {
+    //uint8_t y = beatsin8(x + 1, 0, HEIGHT-1); // это я попытался распотрошить данную функцию до исходного кода и вставить в неё регулятор скорости
+    // вместо 28 в оригинале было 280, умножения на .Speed не было, а вместо >>17 было (<<8)>>24. короче, оригинальная скорость достигается при бегунке .Speed=20
+    uint8_t beat = (GET_MILLIS() * (accum88(x + 1)) * 28 * modes[currentMode].Speed) >> 17;
+    uint8_t y = scale8(sin8(beat), HEIGHT-1);
+    //и получилось!!!
+    
+    drawPixelXY(x, y, ColorFromPalette(*curPalette, x * 7 + hue));
+  }
+}
+
 //далее будут эффекты заточены для лампы в.1 лиш нужно припаять ленты как матрицу(паралельная или зигзаг)
 
 // ****************************** ОГОНЁК ****************************** разный тип матрицы - выглядить будет по разному
@@ -1665,11 +1695,11 @@ void BBallsRoutine() {
       bballsVImpact[i] = bballsVImpact0;                // And "pop" up at vImpact0
       bballsCOR[i] = 0.90 - float(i) / pow(bballsNUM, 2); // это, видимо, прыгучесть. для каждого мячика уникальная изначально
       bballsShift[i] = false;
-      hue2 = (modes[currentMode].Scale > 127U) ? 255U : 0U;                                           // цветные или белые мячики
+      hue2 = (modes[currentMode].Speed > 127U) ? 255U : 0U;                                           // цветные или белые мячики
       hue = (modes[currentMode].Speed == 128U) ? 255U : 254U - modes[currentMode].Speed % 128U * 2U;  // скорость угасания хвостов 0 = моментально
     }
   }
-
+  
   float bballsHi;
   float bballsTCycle;
   deltaHue++; // постепенное изменение оттенка мячиков (закомментировать строчку, если не нужно)
@@ -1708,6 +1738,7 @@ void BBallsRoutine() {
     leds[XY(bballsX[i], bballsPos[i])] = CHSV(bballsCOLOR[i] + deltaHue, hue2, 255U);
   }
 }
+
 /*// ------------------------------ ЭФФЕКТ ПРЫГУНЫ ----------------------
 // стырено откуда-то by @obliterator
 // https://github.com/DmytroKorniienko/FireLamp_JeeUI/blob/templ/src/effects.cpp
