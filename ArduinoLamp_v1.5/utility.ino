@@ -8,13 +8,16 @@ void fillAll(CRGB color) {
 }
 
 // функция отрисовки точки по координатам X Y
-void drawPixelXY(int8_t x, int8_t y, CRGB color) {
-  if (x < 0 || x > WIDTH - 1 || y < 0 || y > HEIGHT - 1) return;
-  int thisPixel = getPixelNumber(x, y) * SEGMENTS;
-  for (byte i = 0; i < SEGMENTS; i++) {
+void drawPixelXY(uint8_t x, uint8_t y, CRGB color)
+{
+  if (x < 0 || x > (WIDTH - 1) || y < 0 || y > (HEIGHT - 1)) return;
+  uint32_t thisPixel = XY((uint8_t)x, (uint8_t)y) * SEGMENTS;
+  for (uint8_t i = 0; i < SEGMENTS; i++)
+  {
     leds[thisPixel + i] = color;
   }
 }
+
 
 // функция получения цвета пикселя по его номеру
 uint32_t getPixColor(uint32_t thisSegm)

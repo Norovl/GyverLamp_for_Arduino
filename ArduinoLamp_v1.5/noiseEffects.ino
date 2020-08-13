@@ -24,11 +24,21 @@ CRGBPalette16 pPalette;
 void SetupPalette()
 {
   // 'black out' all 16 palette entries...
+   if (modes[currentMode].Scale = 1){
+   fill_solid( pPalette, 16, CHSV(hue,255, 75));
+
+  for(uint8_t i = 0; i < 6; i++) {
+    pPalette[i] = CHSV(hue, 255, 255);
+    hue + 1;
+    
+  }} 
+  else{
   fill_solid( pPalette, 16, CHSV(modes[currentMode].Scale * 2.5,255, 75));
 
   for(uint8_t i = 0; i < 6; i++) {
     pPalette[i] = CHSV(modes[currentMode].Scale * 2.5, 255, 255);
-  }
+    
+  }}
 }
 
 

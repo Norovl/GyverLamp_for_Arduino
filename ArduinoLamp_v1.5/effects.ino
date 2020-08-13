@@ -439,6 +439,99 @@ void MetaBallsRoutine() {
     }
   }
 }
+
+// ============= ЭФФЕКТ ВОЛНЫ ===============
+// https://github.com/pixelmatix/aurora/blob/master/PatternWave.h
+// Адаптация от (c) SottNick
+
+    byte waveThetaUpdate = 0;
+    byte waveThetaUpdateFrequency = 0;
+    byte waveTheta = 0;
+
+    byte hueUpdate = 0;
+    byte hueUpdateFrequency = 0;
+//    byte hue = 0; будем использовать сдвиг от эффектов Радуга
+
+    byte waveRotation = 0;
+    uint8_t waveScale = 256 / WIDTH;
+    uint8_t waveCount = 1;
+
+void WaveRoutine() {
+    if (loadingFlag)
+    {
+      loadingFlag = false;
+      setCurrentPalette();
+     
+      //waveRotation = random(0, 4);// теперь вместо этого регулятор Масштаб
+      waveRotation = (modes[currentMode].Scale - 1) / 25U;
+      //waveCount = random(1, 3);// теперь вместо этого чётное/нечётное у регулятора Скорость
+      waveCount = modes[currentMode].Speed % 2;
+      //waveThetaUpdateFrequency = random(1, 2);
+      //hueUpdateFrequency = random(1, 6);      
+    }
+ 
+        dimAll(254);
+  
+        int n = 0;
+
+        switch (waveRotation) {
+            case 0:
+                for (uint8_t x = 0; x < WIDTH; x++) {
+                    n = quadwave8(x * 2 + waveTheta) / waveScale;
+                    drawPixelXY(x, n, ColorFromPalette(*curPalette, hue + x));
+                    if (waveCount != 1)
+                        drawPixelXY(x, HEIGHT - 1 - n, ColorFromPalette(*curPalette, hue + x));
+                }
+                break;
+
+            case 1:
+                for (uint8_t y = 0; y < HEIGHT; y++) {
+                    n = quadwave8(y * 2 + waveTheta) / waveScale;
+                    drawPixelXY(n, y, ColorFromPalette(*curPalette, hue + y));
+                    if (waveCount != 1)
+                        drawPixelXY(WIDTH - 1 - n, y, ColorFromPalette(*curPalette, hue + y));
+                }
+                break;
+
+            case 2:
+                for (uint8_t x = 0; x < WIDTH; x++) {
+                    n = quadwave8(x * 2 - waveTheta) / waveScale;
+                    drawPixelXY(x, n, ColorFromPalette(*curPalette, hue + x));
+                    if (waveCount != 1)
+                        drawPixelXY(x, HEIGHT - 1 - n, ColorFromPalette(*curPalette, hue + x));
+                }
+                break;
+
+            case 3:
+                for (uint8_t y = 0; y < HEIGHT; y++) {
+                    n = quadwave8(y * 2 - waveTheta) / waveScale;
+                    drawPixelXY(n, y, ColorFromPalette(*curPalette, hue + y));
+                    if (waveCount != 1)
+                        drawPixelXY(WIDTH - 1 - n, y, ColorFromPalette(*curPalette, hue + y));
+                }
+                break;
+        }
+
+
+        if (waveThetaUpdate >= waveThetaUpdateFrequency) {
+            waveThetaUpdate = 0;
+            waveTheta++;
+        }
+        else {
+            waveThetaUpdate++;
+        }
+
+        if (hueUpdate >= hueUpdateFrequency) {
+            hueUpdate = 0;
+            hue++;
+        }
+        else {
+            hueUpdate++;
+        }
+        
+        blurScreen(20); // @Palpalych советует делать размытие. вот в этом эффекте его явно не хватает...
+}
+
 //-------------------------Блуждающий кубик-----------------------
 #define RANDOM_COLOR          (1U)                          // случайный цвет при отскоке
 int16_t coordB[2U];
@@ -1168,11 +1261,11 @@ void Fire2018() {
 //    byte spirohueoffset = 0; // будем использовать переменную сдвига оттенка hue из эффектов Радуга
     
 
-    const uint8_t spiroradiusx = WIDTH / 4;
-    const uint8_t spiroradiusy = HEIGHT / 4;
+    const uint8_t spiroradiusx = WIDTH / 4-1;
+    const uint8_t spiroradiusy = HEIGHT / 4-1;
     
-    const uint8_t spirocenterX = WIDTH / 2-0.5;
-    const uint8_t spirocenterY = HEIGHT / 2-0.5;
+    const uint8_t spirocenterX = WIDTH / 2-1;
+    const uint8_t spirocenterY = HEIGHT / 2-1;
     
     const uint8_t spirominx = spirocenterX - spiroradiusx;
     const uint8_t spiromaxx = spirocenterX + spiroradiusx + 1;
@@ -1208,7 +1301,7 @@ void spiroRoutine() {
       setCurrentPalette();
     }
 
-        blurScreen(5);
+        blurScreen(10);
       dimAll(255U - modes[currentMode].Speed / 10);
 
       boolean change = false;
@@ -1472,8 +1565,7 @@ void PrismataRoutine() {
   EVERY_N_MILLIS(33) {
     hue++; // используем переменную сдвига оттенка из функций радуги, чтобы не занимать память
   }
-  blurScreen(20); // @Palpalych посоветовал делать размытие
-  dimAll(255U - (modes[currentMode].Scale - 1U) % 11U * 3U);
+ FastLED.clear(); 
 
   for (uint8_t x = 0; x < WIDTH; x++)
   {
