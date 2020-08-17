@@ -5,42 +5,34 @@ uint8_t wrapX(int8_t x){
 uint8_t wrapY(int8_t y){
   return (y + HEIGHT)%HEIGHT;
 }
-uint8_t deltaHue, deltaHue2; // ещё пара таких же, когда нужно много
 uint8_t step; // какой-нибудь счётчик кадров или постедовательностей операций
 uint8_t pcnt;
 uint8_t line[WIDTH];
 uint8_t deltaValue; // просто повторно используемая переменная
-CRGB ledsbuff[NUM_LEDS];
-#define NUM_LAYERSMAX 2
-uint8_t noise3d[NUM_LAYERSMAX][WIDTH][HEIGHT];
 uint8_t shiftHue[HEIGHT];
 uint8_t shiftValue[HEIGHT];
 // палитра для типа реалистичного водопада (если ползунок Масштаб выставить на 100)
 extern const TProgmemRGBPalette16 WaterfallColors_p FL_PROGMEM = {0x000000, 0x060707, 0x101110, 0x151717, 0x1C1D22, 0x242A28, 0x363B3A, 0x313634, 0x505552, 0x6B6C70, 0x98A4A1, 0xC1C2C1, 0xCACECF, 0xCDDEDD, 0xDEDFE0, 0xB2BAB9};
-// добавлено изменение текущей палитры (используется во многих эффектах ниже для бегунка Масштаб)
-const TProgmemRGBPalette16 *palette_arr[] = {
-    &PartyColors_p,
-    &OceanColors_p, 
-    &LavaColors_p, 
-    &HeatColors_p, 
-    &WaterfallColors_p, 
-    &CloudColors_p, 
-    &ForestColors_p, 
-    &RainbowColors_p, 
-    &RainbowStripeColors_p};
-const TProgmemRGBPalette16 *curPalette = palette_arr[0];
-void setCurrentPalette(){      if (modes[currentMode].Scale > 100U) modes[currentMode].Scale = 100U; // чтобы не было проблем при прошивке без очистки памяти
-      curPalette = palette_arr[(uint8_t)(modes[currentMode].Scale/100.0F*((sizeof(palette_arr)/sizeof(TProgmemRGBPalette16 *))-0.01F))];
-}
 CRGB _pulse_color;
 void blurScreen(fract8 blur_amount, CRGB *LEDarray = leds)
 {
   blur2d(LEDarray, WIDTH, HEIGHT, blur_amount);
 }
-void dimAll(uint8_t value) {
-  for (uint16_t i = 0; i < NUM_LEDS; i++) {
-    leds[i].nscale8(value); //fadeToBlackBy
-  }
+const TProgmemRGBPalette16 *palette_arr[] = {
+  &PartyColors_p,
+  &OceanColors_p,
+  &LavaColors_p,
+  &HeatColors_p,
+  &WaterfallColors_p,
+  &CloudColors_p,
+  &ForestColors_p,
+  &RainbowColors_p,
+  &RainbowStripeColors_p
+};
+const TProgmemRGBPalette16 *curPalette = palette_arr[0];
+void setCurrentPalette() {
+  if (modes[currentMode].Scale > 100U) modes[currentMode].Scale = 100U; // чтобы не было проблем при прошивке без очистки памяти
+  curPalette = palette_arr[(uint8_t)(modes[currentMode].Scale / 100.0F * ((sizeof(palette_arr) / sizeof(TProgmemRGBPalette16 *)) - 0.01F))];
 }
 // --------------------------------- конфетти ------------------------------------
 #define FADE_OUT_SPEED        (70U)                         // скорость затухания
@@ -88,27 +80,27 @@ void fadePixel(uint8_t i, uint8_t j, uint8_t step)          // новый фей
 #define SPARKLES 1        // вылетающие угольки вкл выкл
 //these values are substracetd from the generated values to give a shape to the animation
 const unsigned char valueMask[8][16] PROGMEM = {
-  {32 , 0  , 0  , 0  , 0  , 0  , 0  , 32 , 32 , 0  , 0  , 0  , 0  , 0  , 0  , 32 },
-  {64 , 0  , 0  , 0  , 0  , 0  , 0  , 64 , 64 , 0  , 0  , 0  , 0  , 0  , 0  , 64 },
-  {96 , 32 , 0  , 0  , 0  , 0  , 32 , 96 , 96 , 32 , 0  , 0  , 0  , 0  , 32 , 96 },
-  {128, 64 , 32 , 0  , 0  , 32 , 64 , 128, 128, 64 , 32 , 0  , 0  , 32 , 64 , 128},
-  {160, 96 , 64 , 32 , 32 , 64 , 96 , 160, 160, 96 , 64 , 32 , 32 , 64 , 96 , 160},
-  {192, 128, 96 , 64 , 64 , 96 , 128, 192, 192, 128, 96 , 64 , 64 , 96 , 128, 192},
-  {255, 160, 128, 96 , 96 , 128, 160, 255, 255, 160, 128, 96 , 96 , 128, 160, 255},
-  {255, 192, 160, 128, 128, 160, 192, 255, 255, 192, 160, 128, 128, 160, 192, 255}
+  {0  , 0  , 0  , 32 , 32 , 0  , 0  , 0  , 0  , 0  , 0  , 32 , 32 , 0  , 0  , 0  },
+  {0  , 0  , 0  , 64 , 64 , 0  , 0  , 0  , 0  , 0  , 0  , 64 , 64 , 0  , 0  , 0  },
+  {0  , 0  , 32 , 96 , 96 , 32 , 0  , 0  , 0  , 0  , 32 , 96 , 96 , 32 , 0  , 0  },
+  {0  , 32 , 64 , 128, 128, 64 , 32 , 0  , 0  , 32 , 64 , 128, 128, 64 , 32 , 0  },
+  {32 , 64 , 96 , 160, 160, 96 , 64 , 32 , 32 , 64 , 96 , 160, 160, 96 , 64 , 32 },
+  {64 , 96 , 128, 192, 192, 128, 96 , 64 , 64 , 96 , 128, 192, 192, 128, 96 , 64 },
+  {96 , 128, 160, 255, 255, 160, 128, 96 , 96 , 128, 160, 255, 255, 160, 128, 96 },
+  {128, 160, 192, 255, 255, 192, 160, 128, 128, 160, 192, 255, 255, 192, 160, 128}
 };
 
 //these are the hues for the fire,
 //should be between 0 (red) to about 25 (yellow)
 const unsigned char hueMask[8][16] PROGMEM = {
-  {1 , 11, 19, 25, 25, 22, 11, 1 , 1 , 11, 19, 25, 25, 22, 11, 1 },
-  {1 , 8 , 13, 19, 25, 19, 8 , 1 , 1 , 8 , 13, 19, 25, 19, 8 , 1 },
-  {1 , 8 , 13, 16, 19, 16, 8 , 1 , 1 , 8 , 13, 16, 19, 16, 8 , 1 },
-  {1 , 5 , 11, 13, 13, 13, 5 , 1 , 1 , 5 , 11, 13, 13, 13, 5 , 1 },
-  {1 , 5 , 11, 11, 11, 11, 5 , 1 , 1 , 5 , 11, 11, 11, 11, 5 , 1 },
-  {0 , 1 , 5 , 8 , 8 , 5 , 1 , 0 , 0 , 1 , 5 , 8 , 8 , 5 , 1 , 0 },
-  {0 , 0 , 1 , 5 , 5 , 1 , 0 , 0 , 0 , 0 , 1 , 5 , 5 , 1 , 0 , 0 },
-  {0 , 0 , 0 , 1 , 1 , 0 , 0 , 0 , 0 , 0 , 0 , 1 , 1 , 0 , 0 , 0 }
+  {25, 22, 11, 1 , 1 , 11, 19, 25, 25, 22, 11, 1 , 1 , 11, 19, 25 },
+  {25, 19, 8 , 1 , 1 , 8 , 13, 19, 25, 19, 8 , 1 , 1 , 8 , 13, 19 },
+  {19, 16, 8 , 1 , 1 , 8 , 13, 16, 19, 16, 8 , 1 , 1 , 8 , 13, 16 },
+  {13, 13, 5 , 1 , 1 , 5 , 11, 13, 13, 13, 5 , 1 , 1 , 5 , 11, 13 },
+  {11, 11, 5 , 1 , 1 , 5 , 11, 11, 11, 11, 5 , 1 , 1 , 5 , 11, 11 },
+  {8 , 5 , 1 , 0 , 0 , 1 , 5 , 8 , 8 , 5 , 1 , 0 , 0 , 1 , 5 , 8  },
+  {5 , 1 , 0 , 0 , 0 , 0 , 1 , 5 , 5 , 1 , 0 , 0 , 0 , 0 , 1 , 5  },
+  {1 , 0 , 0 , 0 , 0 , 0 , 0 , 1 , 1 , 0 , 0 , 0 , 0 , 0 , 0 , 1  }
 };
 
 void fireRoutine() {
@@ -480,4 +472,36 @@ void ballsRoutine()
     }
     leds[XY(coord[j][0U] / 10, coord[j][1U] / 10)] =  ballColors[j];
   }
+}
+
+//-----------------Эффект Вышиванка-------------
+byte count = 0;
+byte dir = 1;
+byte flip = 0;
+byte generation = 0;
+void MunchRoutine() { if (loadingFlag)
+  {
+    loadingFlag = false;
+      setCurrentPalette();
+  }
+  for (byte x = 0; x < WIDTH; x++) {
+    for (byte y = 0; y < HEIGHT; y++) {
+      leds[XY(x, y)] = (x ^ y ^ flip) < count ? ColorFromPalette(*curPalette, ((x ^ y) << 4) + generation) : CRGB::Black;
+    }
+  }
+
+  count += dir;
+
+  if (count <= 0 || count >= WIDTH) {
+    dir = -dir;
+  }
+
+  if (count <= 0) {
+    if (flip == 0)
+      flip = 7;
+    else
+      flip = 0;
+  }
+
+  generation++;
 }

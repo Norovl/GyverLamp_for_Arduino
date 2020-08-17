@@ -95,9 +95,9 @@ uint16_t getPixelNumber(uint8_t x, uint8_t y)
 {
   return XY(x, y);
 }
-/*
-// Gamma коррекция (Defalt Gamma = 2.8)
-const uint8_t PROGMEM gammaR[] = {
+
+  // Gamma коррекция (Defalt Gamma = 2.8)
+  const uint8_t PROGMEM gammaR[] = {
   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,
   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,
@@ -114,9 +114,9 @@ const uint8_t PROGMEM gammaR[] = {
   130, 132, 134, 135, 137, 139, 141, 143, 145, 146, 148, 150, 152, 154, 156, 158,
   160, 162, 164, 166, 168, 170, 172, 174, 177, 179, 181, 183, 185, 187, 190, 192,
   194, 196, 199, 201, 203, 206, 208, 210, 213, 215, 218, 220, 223, 225, 227, 230
-};
+  };
 
-const uint8_t PROGMEM gammaG[] = {
+  const uint8_t PROGMEM gammaG[] = {
   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,  1,  1,  1,
   1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,
@@ -133,9 +133,9 @@ const uint8_t PROGMEM gammaG[] = {
   144, 146, 148, 150, 152, 154, 156, 158, 160, 162, 164, 167, 169, 171, 173, 175,
   177, 180, 182, 184, 186, 189, 191, 193, 196, 198, 200, 203, 205, 208, 210, 213,
   215, 218, 220, 223, 225, 228, 231, 233, 236, 239, 241, 244, 247, 249, 252, 255
-};
+  };
 
-const uint8_t PROGMEM gammaB[] = {
+  const uint8_t PROGMEM gammaB[] = {
   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,
   0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  0,  1,
   1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,
@@ -152,10 +152,10 @@ const uint8_t PROGMEM gammaB[] = {
   113, 115, 116, 118, 119, 121, 122, 124, 126, 127, 129, 131, 132, 134, 136, 137,
   139, 141, 143, 144, 146, 148, 150, 152, 153, 155, 157, 159, 161, 163, 165, 167,
   169, 171, 173, 175, 177, 179, 181, 183, 185, 187, 189, 191, 193, 196, 198, 200
-};
+  };
 
-// гамма-коррекция (более натуральные цвета)
-uint32_t gammaCorrection(uint32_t color) {
+  // гамма-коррекция (более натуральные цвета)
+  uint32_t gammaCorrection(uint32_t color) {
   byte r = (color >> 16) & 0xFF;  // Extract the RR byte
   byte g = (color >> 8) & 0xFF;   // Extract the GG byte
   byte b = color & 0xFF;        // Extract the BB byte
@@ -166,17 +166,17 @@ uint32_t gammaCorrection(uint32_t color) {
 
   uint32_t newColor = ((long)(r & 0xff) << 16) + ((long)(g & 0xff) << 8) + ((long)b & 0xff);
   return newColor;
-}
+  }
 
-// gamma correction для expandColor
-static const uint8_t PROGMEM
-gamma5[] = {
+  // gamma correction для expandColor
+  static const uint8_t PROGMEM
+  gamma5[] = {
   0x00, 0x01, 0x02, 0x03, 0x05, 0x07, 0x09, 0x0b,
   0x0e, 0x11, 0x14, 0x18, 0x1d, 0x22, 0x28, 0x2e,
   0x36, 0x3d, 0x46, 0x4f, 0x59, 0x64, 0x6f, 0x7c,
   0x89, 0x97, 0xa6, 0xb6, 0xc7, 0xd9, 0xeb, 0xff
-},
-gamma6[] = {
+  },
+  gamma6[] = {
   0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x08,
   0x09, 0x0a, 0x0b, 0x0d, 0x0e, 0x10, 0x12, 0x13,
   0x15, 0x17, 0x19, 0x1b, 0x1d, 0x20, 0x22, 0x25,
@@ -185,11 +185,11 @@ gamma6[] = {
   0x64, 0x69, 0x6e, 0x74, 0x79, 0x7f, 0x85, 0x8b,
   0x91, 0x97, 0x9d, 0xa4, 0xab, 0xb2, 0xb9, 0xc0,
   0xc7, 0xcf, 0xd6, 0xde, 0xe6, 0xee, 0xf7, 0xff
-};
+  };
 
-// преобразовать цвет из 16 битного в 24 битный
-static uint32_t expandColor(uint16_t color) {
+  // преобразовать цвет из 16 битного в 24 битный
+  static uint32_t expandColor(uint16_t color) {
   return ((uint32_t)pgm_read_byte(&gamma5[ color >> 11       ]) << 16) |
          ((uint32_t)pgm_read_byte(&gamma6[(color >> 5) & 0x3F]) <<  8) |
          pgm_read_byte(&gamma5[ color       & 0x1F]);
-}*/
+  }

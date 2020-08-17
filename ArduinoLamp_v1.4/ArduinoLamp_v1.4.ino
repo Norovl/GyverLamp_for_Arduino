@@ -10,7 +10,6 @@
 #include <FastLED.h>
 #include <GyverButtonOld.h>
 //-----------------            -----------------
-#define FASTLED_USE_PROGMEM 1 // просим библиотеку FASTLED экономить память контроллера на свои палитры
 #include "Constants.h"
 // ----------------- ПЕРЕМЕННЫЕ ------------------
 static const byte maxDim = max(WIDTH, HEIGHT);

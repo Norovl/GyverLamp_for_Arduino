@@ -35,10 +35,11 @@ void effectsTick() {
         case 27: ballRoutine();                 break;
         case 28: ballsRoutine();                break;
         case 29: fire2012WithPalette();         break;
-        case 30: noiseWave(false);              break;
-        case 31: noiseWave(true);               break;
-        case 32: lightersRoutine();             break;
-        case 33: pulseRoutine(1);               break;
+        case 30: lightersRoutine();             break;
+        case 31: pulseRoutine(1);               break;
+        case 32: ringsRoutine();                break;
+        case 33: starRoutine();                 break;
+        case 34: MunchRoutine();                break;
 
       }
       switch (numHold) {    // индикатор уровня яркости/скорости/масштаба

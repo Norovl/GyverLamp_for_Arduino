@@ -192,20 +192,6 @@ void smokeNoise()
   }
   fillNoiseLED(1,0,0.125);
 }
-
-void lavLampNoise()
-{
-  if (loadingFlag)
-  {
-    loadingFlag = false;
-    SetupPalette();
-    currentPalette = pPalette;
-    scale = 30;
-    speed = modes[currentMode].Speed;
-    colorLoop = 0;
-  }
-  fillNoiseLED(1,0.625,0.125);
-}
 // ************* СЛУЖЕБНЫЕ *************
 void fillNoiseLED(byte x_dir, byte y_dir, byte z_dir)
 {

@@ -1,6 +1,6 @@
 uint32_t effTimer;
 byte ind;
-void effectsTick() { { if (ONflag && millis() - effTimer >= ((currentMode < 5 || currentMode > 16) ? modes[currentMode].Speed : 50) ) {effTimer = millis(); switch (currentMode) {
+void effectsTick() { { if (ONflag && millis() - effTimer >= ((currentMode < 5 || currentMode > 17) ? modes[currentMode].Speed : 50) ) {effTimer = millis(); switch (currentMode) {
 //|номер   |название функции эффекта     |тоже надо|
    case 0 : sparklesRoutine();             break;
    case 1 : fireRoutine();                 break;
@@ -18,7 +18,6 @@ void effectsTick() { { if (ONflag && millis() - effTimer >= ((currentMode < 5 ||
    case 14: oceanNoise();                  break;
    case 15: heatNoise();                   break;
    case 16: smokeNoise();                  break;
-   case 17: lavLampNoise();                break; 
    case 18: colorRoutine();                break;
    case 19: colorsRoutine();               break;
    case 20: whiteLamp();                   break;
@@ -28,6 +27,7 @@ void effectsTick() { { if (ONflag && millis() - effTimer >= ((currentMode < 5 ||
    case 24: stormRoutine2(false);          break;
    case 25: ballRoutine();                 break;
    case 26: ballsRoutine();                break;
+   case 27: MunchRoutine();                break;
 }
       switch (numHold) {    // индикатор уровня яркости/скорости/масштаба
         case 1:

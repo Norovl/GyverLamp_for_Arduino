@@ -10,7 +10,7 @@
 #include <GyverButtonOld.h>
 #include <FastLED.h>
 //-----------------            -----------------
-//#include "bitmap2.h"
+#include "bitmap2.h"
 #include "Constants.h"
 // ----------------- ПЕРЕМЕННЫЕ ------------------
 static const byte maxDim = max(WIDTH, HEIGHT);

@@ -19,7 +19,7 @@
 // ============= ДЛЯ РАЗРАБОТЧИКОВ =============
 #define LED_PIN 6             // пин ленты
 #define BTN_PIN 2
-#define MODE_AMOUNT 34       //кол-во эффектов
+#define MODE_AMOUNT 36       //кол-во эффектов
 #define NUM_LEDS WIDTH * HEIGHT
 #define SEGMENTS 1// диодов в одном "пикселе" (для создания матрицы из кусков ленты)
 // ------------------- ТИПЫ --------------------
@@ -34,4 +34,3 @@ struct {
 #define RANDOM_DEMO 0                         // 0,1 - включить рандомный выбор режима
 uint32_t DemTimer = 0UL;                      // тут будет храниться время следующего переключения эффекта
 bool isDemo = false;
-   
