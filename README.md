@@ -2,6 +2,7 @@
 
 Это облегченная версия прошивки AlexGyver под ардуино.
 (Оригинал здесь: ![Исходная версия](https://github.com/AlexGyver/GyverLamp/))
+Обновление будут выходить там: https://github.com/80Stepko08/ArduinoLamp
 
 ## Краткое описание:
 
