@@ -1,18 +1,18 @@
 boolean brightDirection, speedDirection, scaleDirection;
 //byte numHold;
-
+#ifdef DEBUG
 void debugPrint(){
     Serial.print(numHold);
-    Serial.print(" brightness:");
+    Serial.print(F(" brightness:"));
     Serial.print(modes[currentMode].brightness);
-    Serial.print(" speed:");
+    Serial.print(F(" speed:"));
     Serial.print(modes[currentMode].speed);
-    Serial.print(" scale:");
+    Serial.print(F(" scale:"));
     Serial.print(modes[currentMode].scale);
-    Serial.print(" numHold_Timer:");
+    Serial.print(F(" numHold_Timer:"));
     Serial.println(numHold_Timer);
 }
-
+#endif
 void changeDirection(byte numHold){
   switch(numHold){
     case 0: case 1: brightDirection = !brightDirection; break;
@@ -28,7 +28,7 @@ void buttonTick() {
   if (!ONflag) { // Обработка из выключенного состояния
     #ifdef DEBUG
     if(touch.isPress())
-      Serial.println("Off state");
+      Serial.println(F("Off state"));
     #endif
     
     if (touch.isDouble()) { // Демо-режим, с переключением каждые 30 секунд для двойного клика в выключенном состоянии
@@ -42,14 +42,14 @@ void buttonTick() {
       //brightDirection = 0; // на уменьшение
       changePower();
       #ifdef DEBUG
-        Serial.print("Demo mode: ");
+        Serial.print(F("Demo mode: "));
         Serial.println(currentMode);
       #endif
     }
     
     if (touch.isHolded()) {
       #ifdef DEBUG
-        Serial.println("Holdeded from offed state");
+        Serial.println(F("Holdeded from offed state"));
       #endif
       currentMode = 17;
       modes[currentMode].brightness = BRIGHTNESS;
@@ -64,29 +64,21 @@ void buttonTick() {
   }  
 
   if (touch.isSingle()) { // Включение/выключение одиночным
-    //    if (dawnFlag) {
-    //      //manualOff = true;
-    //      dawnFlag = false;
-    //      loadingFlag = true;
-    //      FastLED.setBrightness(modes[currentMode].brightness);
-    //      changePower();
-    //    } else
-    // Serial.println("Single click");
+
     {
       if (ONflag) {
         ONflag = false;
         #ifdef DEBUG
-          Serial.println("Off lamp");
+          Serial.println(F("Off lamp"));
         #endif
         changePower();
       } else {
         ONflag = true;
         #ifdef DEBUG
-          Serial.println("On lamp");
+          Serial.println(F("On lamp"));
           debugPrint(); // отладка
         #endif
-        //FastLED.setBrightness(modes[currentMode].brightness);
-        //changePower();
+        
       }
     }
   }
@@ -94,7 +86,7 @@ void buttonTick() {
 if (ONflag) {                 // если включено
   if (touch.isDouble()) {
     #ifdef DEBUG
-      Serial.println("Double click");
+      Serial.println(F("Double click"));
       //debugPrint(); // отладка
     #endif
     if (++currentMode >= MODE_AMOUNT) currentMode = 0;
@@ -106,7 +98,7 @@ if (ONflag) {                 // если включено
   }
   if (touch.isTriple()) {
     #ifdef DEBUG
-      Serial.println("Triple click");
+      Serial.println(F("Triple click"));
       //debugPrint(); // отладка
     #endif
     if (--currentMode < 0) currentMode = MODE_AMOUNT - 1;
@@ -177,50 +169,17 @@ if (ONflag) {                 // если включено
     
     switch (numHold) {
       case 1:
-      case 254:
-        //                if (brightDirection) {
-        //                  if (modes[currentMode].brightness < 10) modes[currentMode].brightness += 1;
-        //                  else if (modes[currentMode].brightness < 250) modes[currentMode].brightness += 5;
-        //                  else modes[currentMode].brightness = 255;
-        //                } else {
-        //                  if (modes[currentMode].brightness > 15) modes[currentMode].brightness -= 5;
-        //                  else if (modes[currentMode].brightness > 1) modes[currentMode].brightness -= 1;
-        //                  else modes[currentMode].brightness = 1;
-        //                }
-        if(currentMode==17)
-          modes[currentMode].brightness = constrain(modes[currentMode].brightness + (modes[currentMode].brightness / 25 + 1) * (brightDirection * 2 - 1), MIN17BRIGHTNESS , BRIGHTNESS);
-        else
-          modes[currentMode].brightness = constrain(modes[currentMode].brightness + (modes[currentMode].brightness / 25 + 1) * (brightDirection * 2 - 1), 1 , BRIGHTNESS);
-        //        byte x = sqrt(modes[currentMode].brightness);
-        //        for (byte y = 0; y < HEIGHT - 1; y++) {
-        //          if (x < y) drawPixelXY(1, y, CHSV(10,200,200));
-        //             else drawPixelXY(1, y, CHSV(1,0,0));
-        //        }
+  
+          modes[currentMode].brightness = constrain(modes[currentMode].brightness + (modes[currentMode].brightness / 25 + 1) * (brightDirection * 2 - 1), MINBRIGHTNESS , BRIGHTNESS);
         break;
 
       case 2:
-        //                if (speedDirection) {
-        //                  if (modes[currentMode].speed < 10) modes[currentMode].speed += 1;
-        //                  else if (modes[currentMode].speed < 250) modes[currentMode].speed += 5;
-        //                  else modes[currentMode].speed = 255;
-        //                } else {
-        //                  if (modes[currentMode].speed > 15) modes[currentMode].speed -= 5;
-        //                  else if (modes[currentMode].speed > 1) modes[currentMode].speed -= 1;
-        //                  else modes[currentMode].speed = 1;
-        //                }
+
         modes[currentMode].speed = constrain(modes[currentMode].speed + (modes[currentMode].speed / 25 + 1) * (speedDirection * 2 - 1), 1 , 255);
         break;
 
       case 3:
-        //                if (scaleDirection) {
-        //                  if (modes[currentMode].scale < 10) modes[currentMode].scale += 1;
-        //                  else if (modes[currentMode].scale < 250) modes[currentMode].scale += 5;
-        //                  else modes[currentMode].scale = 255;
-        //                } else {
-        //                  if (modes[currentMode].scale > 15) modes[currentMode].scale -= 5;
-        //                  else if (modes[currentMode].scale > 1) modes[currentMode].scale -= 1;
-        //                  else modes[currentMode].scale = 1;
-        //                }
+    
         modes[currentMode].scale = constrain(modes[currentMode].scale + (modes[currentMode].scale / 25 + 1) * (scaleDirection * 2 - 1), 1 , 255);
         break;
     }
@@ -253,13 +212,12 @@ if (ONflag) {                 // если включено
       else
         currentMode=(currentMode+1)%17; // 17 скипаем и идем по наростанию
       #ifdef DEBUG
-        Serial.print("Demo mode: ");
+        Serial.print(F("Demo mode: "));
         Serial.println(currentMode);
       #endif
       userTimer = millis(); 
     }
    
     FastLED.setBrightness(modes[currentMode].brightness);
-    //settChanged = true;
   }
 }

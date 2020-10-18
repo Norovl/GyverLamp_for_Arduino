@@ -18,8 +18,8 @@
 
 // ============= НАСТРОЙКИ =============
 
-#define DEBUG 1
-#define VERTGAUGE 1 // вертикальный/горизонтальный индикатор
+//#define DEBUG      // Дебаг(Нужен, расскоментируйте)
+#define VERTGAUGE 0 // вертикальный/горизонтальный индикатор
 #define DEMOTIME 5 // в секундах
 #define RANDOM_DEMO 1 // 0,1 - включить рандомный выбор режима
 
@@ -29,7 +29,7 @@
 
 // ---------- МАТРИЦА ---------
 #define BRIGHTNESS 255        // стандартная маскимальная яркость (0-255)
-#define MIN17BRIGHTNESS 50    // минимальная яркость 17 режима, белая лампа (0-100) для исключения нерабочей зоны
+#define MINBRIGHTNESS 25     // минимальная яркость режимов (0-100) для исключения черной лампы
 #define CURRENT_LIMIT 2600    // лимит по току в миллиамперах, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
 
 #define WIDTH 16              // ширина матрицы
@@ -53,19 +53,16 @@
 #define SEGMENTS 1            // диодов в одном "пикселе" (для создания матрицы из кусков ленты)
 
 // ---------------- БИБЛИОТЕКИ -----------------
-//#include "timerMinim.h"
 #include <EEPROM.h>
 #include <FastLED.h>
-#include <GyverButton.h>
+#include <GyverButtonOld.h>
 
 // ------------------- ТИПЫ --------------------
 CRGB leds[NUM_LEDS];
-//timerMinim timeTimer(3000);
 GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
 
 // ----------------- ПЕРЕМЕННЫЕ ------------------
 
-//String inputBuffer;
 static const byte maxDim = max(WIDTH, HEIGHT);
 struct {
   byte brightness = 50;
@@ -73,16 +70,6 @@ struct {
   byte scale = 10;
 } modes[MODE_AMOUNT];
 
-//struct {
-//  boolean state = false;
-//  int time = 0;
-//} alarm[7];
-
-//byte dawnOffsets[] = {5, 10, 15, 20, 25, 30, 40, 50, 60};
-//byte dawnMode;
-//boolean dawnFlag = false;
-//long thisTime;
-//boolean manualOff = false;
 
 int8_t currentMode = 17;
 boolean loadingFlag = true;
@@ -90,13 +77,6 @@ boolean ONflag = true;
 byte numHold;
 unsigned long numHold_Timer = 0UL;
 unsigned long userTimer = 0UL;
-//uint32_t eepromTimer;
-//boolean settChanged = false;
-// Конфетти, Огонь, Радуга верт., Радуга гориз., Смена цвета,
-// Безумие 3D, Облака 3D, Лава 3D, Плазма 3D, Радуга 3D,
-// Павлин 3D, Зебра 3D, Лес 3D, Океан 3D,
-// colorRoutine, snowRoutine, полосы "Матрица"
-
 unsigned char matrixValue[8][16];
 byte xStep;
 byte xCol;
@@ -106,7 +86,7 @@ byte yCol;
 void setup() {
 
   // ЛЕНТА
-  FastLED.addLeds<WS2812B, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS)/*.setCorrection( TypicalLEDStrip )*/;
+  FastLED.addLeds<WS2812B, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(0xFFB0F0);
   FastLED.setBrightness(BRIGHTNESS);
   if (CURRENT_LIMIT > 0) FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT);
   FastLED.clear();
@@ -115,8 +95,8 @@ void setup() {
   touch.setStepTimeout(100);
   touch.setClickTimeout(500);
 
-  Serial.begin(9600);
-  Serial.println();
+  //Serial.begin(9600);
+  //Serial.println();
 
   xStep = WIDTH / 4;
   xCol = 4;
@@ -168,7 +148,5 @@ void setup() {
 
 void loop() {
   effectsTick();
-  //timeTick();
-  buttonTick();
-  //yield();
+  buttonTick();  //yield();
 }
