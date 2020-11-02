@@ -18,13 +18,19 @@
 
 // ============= НАСТРОЙКИ =============
 
+//#define DEBUG      // Дебаг(Нужен, расскоментируйте)
+#define VERTGAUGE 0 // вертикальный/горизонтальный индикатор
+#define DEMOTIME 5 // в секундах
+#define RANDOM_DEMO 1 // 0,1 - включить рандомный выбор режима
+
 //// -------- РАССВЕТ -------
 //#define DAWN_BRIGHT 200       // макс. яркость рассвета
 //#define DAWN_TIMEOUT 1        // сколько рассвет светит после времени будильника, минут
 
 // ---------- МАТРИЦА ---------
-#define BRIGHTNESS 40         // стандартная маскимальная яркость (0-255)
-#define CURRENT_LIMIT 2000    // лимит по току в миллиамперах, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
+#define BRIGHTNESS 255        // стандартная маскимальная яркость (0-255)
+#define MINBRIGHTNESS 25     // минимальная яркость режимов (0-100) для исключения черной лампы
+#define CURRENT_LIMIT 2600    // лимит по току в миллиамперах, автоматически управляет яркостью (пожалей свой блок питания!) 0 - выключить лимит
 
 #define WIDTH 16              // ширина матрицы
 #define HEIGHT 16             // высота матрицы
@@ -47,19 +53,16 @@
 #define SEGMENTS 1            // диодов в одном "пикселе" (для создания матрицы из кусков ленты)
 
 // ---------------- БИБЛИОТЕКИ -----------------
-//#include "timerMinim.h"
 #include <EEPROM.h>
 #include <FastLED.h>
-#include <GyverButton.h>
+#include <GyverButtonOld.h>
 
 // ------------------- ТИПЫ --------------------
 CRGB leds[NUM_LEDS];
-//timerMinim timeTimer(3000);
 GButton touch(BTN_PIN, LOW_PULL, NORM_OPEN);
 
 // ----------------- ПЕРЕМЕННЫЕ ------------------
 
-//String inputBuffer;
 static const byte maxDim = max(WIDTH, HEIGHT);
 struct {
   byte brightness = 50;
@@ -67,35 +70,23 @@ struct {
   byte scale = 10;
 } modes[MODE_AMOUNT];
 
-//struct {
-//  boolean state = false;
-//  int time = 0;
-//} alarm[7];
-
-//byte dawnOffsets[] = {5, 10, 15, 20, 25, 30, 40, 50, 60};
-//byte dawnMode;
-//boolean dawnFlag = false;
-//long thisTime;
-//boolean manualOff = false;
 
 int8_t currentMode = 17;
 boolean loadingFlag = true;
 boolean ONflag = true;
 byte numHold;
-unsigned long numHold_Timer = 0;
-//uint32_t eepromTimer;
-//boolean settChanged = false;
-// Конфетти, Огонь, Радуга верт., Радуга гориз., Смена цвета,
-// Безумие 3D, Облака 3D, Лава 3D, Плазма 3D, Радуга 3D,
-// Павлин 3D, Зебра 3D, Лес 3D, Океан 3D,
-// colorRoutine, snowRoutine, полосы "Матрица"
-
+unsigned long numHold_Timer = 0UL;
+unsigned long userTimer = 0UL;
 unsigned char matrixValue[8][16];
+byte xStep;
+byte xCol;
+byte yStep;
+byte yCol;
 
 void setup() {
 
   // ЛЕНТА
-  FastLED.addLeds<WS2812B, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS)/*.setCorrection( TypicalLEDStrip )*/;
+  FastLED.addLeds<WS2812B, LED_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection(0xFFB0F0);
   FastLED.setBrightness(BRIGHTNESS);
   if (CURRENT_LIMIT > 0) FastLED.setMaxPowerInVoltsAndMilliamps(5, CURRENT_LIMIT);
   FastLED.clear();
@@ -104,8 +95,45 @@ void setup() {
   touch.setStepTimeout(100);
   touch.setClickTimeout(500);
 
-  Serial.begin(9600);
-  Serial.println();
+  //Serial.begin(9600);
+  //Serial.println();
+
+  xStep = WIDTH / 4;
+  xCol = 4;
+  if(xStep<2) {
+    xStep = WIDTH / 3;
+    xCol = 3;
+  } else if(xStep<2) {
+    xStep = WIDTH / 2;
+    xCol = 2;
+  } else if(xStep<2) {
+    xStep = 1;
+    xCol = 1;
+  }
+
+  yStep = HEIGHT / 4;
+  yCol = 4;
+  if(yStep<2) {
+    yStep = HEIGHT / 3;
+    yCol = 3;
+  } else if(yStep<2) {
+    yStep = HEIGHT / 2;
+    yCol = 2;
+  } else if(yStep<2) {
+    yStep = 1;
+    yCol = 1;
+  }
+
+  #ifdef DEBUG
+    Serial.print("xStep: ");
+    Serial.print(xStep);
+    Serial.print(" xCol:");
+    Serial.println(xCol);
+    Serial.print("yStep: ");
+    Serial.print(yStep);
+    Serial.print(" yCol:");
+    Serial.println(yCol);
+  #endif
 
   if (EEPROM.read(0) == 102) {                    // если было сохранение настроек, то восстанавливаем их (с)НР
     currentMode = EEPROM.read(1);
@@ -120,7 +148,5 @@ void setup() {
 
 void loop() {
   effectsTick();
-  //timeTick();
-  buttonTick();
-  //yield();
+  buttonTick();  //yield();
 }
